@@ -24,7 +24,10 @@ import {
   MapPin,
   Phone,
   UserCheck,
-  ShieldCheck
+  ShieldCheck,
+  Download,
+  Wifi,
+  WifiOff
 } from "lucide-react";
 import { 
   Product, 
@@ -40,6 +43,14 @@ export default function App() {
   // Splash Screen State
   const [showSplash, setShowSplash] = useState(true);
   const [splashProgress, setSplashProgress] = useState(0);
+
+  // Progressive Web App (PWA) Install Prompt States
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+  const [showNetworkToast, setShowNetworkToast] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
+  const [toastType, setToastType] = useState<"online" | "offline">("online");
 
   // Core App states
   const [activeTab, setActiveTab] = useState<"home" | "catalog" | "ai" | "profile">("home");
@@ -137,6 +148,61 @@ export default function App() {
       return () => clearInterval(interval);
     }
   }, [showSplash]);
+
+  // PWA & Network Integrity Monitoring
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBanner(true);
+    };
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      setToastMessage("Internet aloqasi tiklandi! Tarmoq hozir faol.");
+      setToastType("online");
+      setShowNetworkToast(true);
+      setTimeout(() => setShowNetworkToast(false), 4000);
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      setToastMessage("Internet aloqasi uzildi. Ilova barqaror oflayn rejimda ishlamoqda.");
+      setToastType("offline");
+      setShowNetworkToast(true);
+      setTimeout(() => setShowNetworkToast(false), 4000);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Initial check
+    if (!navigator.onLine) {
+      setTimeout(() => {
+        handleOffline();
+      }, 3500);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const triggerPWAInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    try {
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`PWA o'rnatish tanlovi: ${outcome}`);
+    } catch (err) {
+      console.error("Install prompt error:", err);
+    }
+    setDeferredPrompt(null);
+    setShowInstallBanner(false);
+  };
 
   // Rotate promo carousel is manual only to ensure stability against unprompted movement
   useEffect(() => {
@@ -290,6 +356,58 @@ export default function App() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Dynamic Network Status Pop Toast */}
+        <AnimatePresence>
+          {showNetworkToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 16, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.9 }}
+              className={`absolute top-12 left-4 right-4 z-[115] p-3 rounded-2xl shadow-xl flex items-center gap-3 border ${
+                toastType === "online" 
+                  ? "bg-slate-900 border-slate-800 text-emerald-400" 
+                  : "bg-red-950 border-red-900 text-red-300"
+              }`}
+            >
+              <div className={`p-2 rounded-xl ${
+                toastType === "online" ? "bg-emerald-500/15" : "bg-red-500/15"
+              }`}>
+                {toastType === "online" ? (
+                  <Wifi className="w-4 h-4 text-emerald-400" />
+                ) : (
+                  <WifiOff className="w-4 h-4 text-red-00" />
+                )}
+              </div>
+              <div className="flex-1 text-left">
+                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  Tarmoq Holati
+                </span>
+                <p className="text-[11px] font-bold leading-normal text-white">
+                  {toastMessage}
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowNetworkToast(false)}
+                className="text-slate-400 hover:text-white p-1 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Quiet Persistent Offline Banner */}
+        {!isOnline && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[9px] py-1.5 px-4 font-black tracking-widest uppercase flex items-center justify-center gap-1.5 select-none text-center z-[100]"
+          >
+            <WifiOff className="w-3.5 h-3.5 animate-bounce" />
+            <span>Oflayn rejim faollashtirildi</span>
+          </motion.div>
+        )}
 
         {/* TOP STATUS BAR MOCK */}
         <div className="w-full px-5 py-3 bg-slate-50 border-b border-slate-100 flex justify-center items-center select-none">
@@ -782,6 +900,50 @@ export default function App() {
                       <span className="block text-xs font-black text-emerald-500">Premium</span>
                       <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Status</span>
                     </div>
+                  </div>
+                </motion.div>
+
+                {/* PWA Installation Section - Custom Widget */}
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.05 }}
+                  className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 p-4 rounded-3xl text-left border border-slate-800 shadow-lg text-white relative overflow-hidden select-none"
+                >
+                  <div className="absolute top-[-25px] right-[-25px] w-28 h-28 rounded-full bg-[#FD6C1D]/15 blur-2xl"></div>
+                  <div className="flex items-start gap-3 relative z-10">
+                    <div className="p-3 bg-white/10 rounded-2xl border border-white/10 text-[#ADF762] flex-shrink-0">
+                      <Download className="w-5 h-5 animate-pulse" />
+                    </div>
+                    <div className="space-y-1 flex-1">
+                      <span className="text-[8.5px] uppercase font-black text-[#ADF762] tracking-widest bg-[#ADF762]/10 border border-[#ADF762]/30 px-2.5 py-0.5 rounded-full inline-block">
+                        Mobil &amp; Desktop PWA
+                      </span>
+                      <h3 className="text-xs font-black uppercase text-white tracking-wide">Mobil Ilova Sifatida</h3>
+                      <p className="text-[10px] text-slate-300 leading-normal">
+                        Noutbuklar do'konini to'g'ridan-to'g'ri telefoningiz yoki kompyuteringiz bosh ekraniga o'rnatib oling. Oflayn rejim va tezkor kirish imkoniyati!
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-white/5 flex gap-2 justify-end relative z-10">
+                    {deferredPrompt ? (
+                      <button
+                        onClick={triggerPWAInstall}
+                        className="bg-[#FD6C1D] hover:bg-[#FD851D] text-white text-[10px] font-black uppercase tracking-wider px-4 py-2.5 rounded-xl transition cursor-pointer active:scale-95 shadow"
+                      >
+                        Ilovani o'rnatish
+                      </button>
+                    ) : (
+                      <div className="flex flex-col w-full text-slate-400 text-[9px] font-medium leading-relaxed gap-1">
+                        <span className="text-[#ADF762] font-semibold flex items-center gap-1">
+                          🟢 Ilova PWA (Progressive Web App) holatida ishlamoqda
+                        </span>
+                        <span>
+                          Agar xohlasangiz, Safari yoki Chrome menyusidan <b className="text-white">"Ekraningizga qo'shish"</b> bandini tanlab mustaqil o'rnatishingiz ham mumkin.
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
 
