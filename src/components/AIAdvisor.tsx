@@ -382,17 +382,18 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
                 </label>
                 <div className="flex flex-wrap gap-2 text-xs">
                   {purposeOptions.map(opt => (
-                    <button
+                    <motion.button
                       key={opt}
+                      whileTap={{ scale: 0.94 }}
                       onClick={() => setPurpose(opt)}
-                      className={`px-3 py-2.5 rounded-xl border font-medium transition-all ${
+                      className={`px-3 py-2.5 rounded-xl border font-medium cursor-pointer transition-all ${
                         purpose === opt 
                           ? "bg-[#5A20D4] text-white border-[#5A20D4] shadow-sm shadow-[#5A20D4]/20" 
                           : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                       }`}
                     >
                       {opt}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
@@ -403,9 +404,14 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
                   <label className="text-slate-800 flex items-center gap-1.5">
                     <CircleDollarSign className="w-4 h-4 text-[#FD6C1D]" /> Byudjetingiz qancha?
                   </label>
-                  <span className="text-[#FD6C1D] font-bold text-base bg-orange-50 px-3 py-1 rounded-lg border border-orange-100">
+                  <motion.span 
+                    key={budget}
+                    initial={{ scale: 0.9, opacity: 0.8 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="text-[#FD6C1D] font-bold text-base bg-orange-50 px-3 py-1 rounded-lg border border-orange-100"
+                  >
                     {budget.toLocaleString("uz-UZ")} UZS
-                  </span>
+                  </motion.span>
                 </div>
                 <input
                   type="range"
@@ -431,17 +437,18 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                   {osOptions.map(opt => (
-                    <button
+                    <motion.button
                       key={opt}
+                      whileTap={{ scale: 0.94 }}
                       onClick={() => setOs(opt)}
-                      className={`px-3 py-2.5 rounded-xl border font-medium transition-all text-center ${
+                      className={`px-3 py-2.5 rounded-xl border font-medium cursor-pointer transition-all text-center ${
                         os === opt 
                           ? "bg-[#5A20D4] text-white border-[#5A20D4] shadow-sm shadow-[#5A20D4]/20" 
                           : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                       }`}
                     >
                       {opt}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
@@ -453,17 +460,18 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
                 </label>
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   {batteryOptions.map(opt => (
-                    <button
+                    <motion.button
                       key={opt}
+                      whileTap={{ scale: 0.94 }}
                       onClick={() => setBattery(opt)}
-                      className={`px-3 py-2.5 rounded-xl border font-medium transition-all text-center ${
+                      className={`px-3 py-2.5 rounded-xl border font-medium cursor-pointer transition-all text-center ${
                         battery === opt 
                           ? "bg-[#5A20D4] text-white border-[#5A20D4]" 
                           : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                       }`}
                     >
                       {opt}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
@@ -477,10 +485,11 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
                   {softwareOptions.map(opt => {
                     const isSelected = software.includes(opt);
                     return (
-                      <button
+                      <motion.button
                         key={opt}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => handleSoftwareToggle(opt)}
-                        className={`px-3 py-2.5 rounded-xl border font-medium transition-all flex items-center gap-1.5 ${
+                        className={`px-3 py-2.5 rounded-xl border font-medium cursor-pointer transition-all flex items-center gap-1.5 ${
                           isSelected 
                             ? "bg-slate-900 text-[#ADF762] border-slate-900 shadow-sm" 
                             : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
@@ -488,7 +497,7 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
                       >
                         {isSelected && <Check className="w-3.5 h-3.5" />}
                         {opt}
-                      </button>
+                      </motion.button>
                     );
                   })}
                 </div>
@@ -503,10 +512,11 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
                   {brandOptions.map(opt => {
                     const isSelected = brands.includes(opt);
                     return (
-                      <button
+                      <motion.button
                         key={opt}
+                        whileTap={{ scale: 0.94 }}
                         onClick={() => handleBrandToggle(opt)}
-                        className={`px-3 py-2 rounded-xl border font-medium transition-all flex items-center gap-1.5 ${
+                        className={`px-3 py-2 rounded-xl border font-medium cursor-pointer transition-all flex items-center gap-1.5 ${
                           isSelected 
                             ? "bg-[#FD6C1D] text-white border-[#FD6C1D]" 
                             : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
@@ -514,7 +524,7 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
                       >
                         {isSelected && <Check className="w-3 h-3" />}
                         {opt}
-                      </button>
+                      </motion.button>
                     );
                   })}
                 </div>
@@ -535,12 +545,13 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
               </div>
 
               {/* Action button */}
-              <button
+              <motion.button
+                whileTap={{ scale: 0.97 }}
                 onClick={runRecommendation}
-                className="w-full mt-2 py-4 rounded-xl bg-gradient-to-r from-[#FD6C1D] to-[#FD851D] text-white text-sm font-bold shadow-md hover:shadow-lg hover:brightness-105 active:scale-98 transition flex items-center justify-center gap-2"
+                className="w-full mt-2 py-4 rounded-xl bg-gradient-to-r from-[#FD6C1D] to-[#FD851D] text-white text-sm font-bold shadow-md hover:shadow-lg hover:brightness-105 transition flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Flame className="w-4 h-4 animate-bounce" /> Qidirish (Tavsiya olish)
-              </button>
+              </motion.button>
             </motion.div>
           )}
 

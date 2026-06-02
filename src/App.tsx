@@ -431,15 +431,20 @@ export default function App() {
               <div className="space-y-3 text-left">
                 <span className="text-[11px] uppercase tracking-wider font-bold text-slate-400">Kategoriyalar</span>
                 <div className="grid grid-cols-3 gap-2">
-                  {CATEGORIES.map(cat => (
-                    <button
+                  {CATEGORIES.map((cat, idx) => (
+                    <motion.button
                       key={cat.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25, delay: idx * 0.05 }}
+                      whileTap={{ scale: 0.94 }}
+                      whileHover={{ scale: 1.02 }}
                       onClick={() => {
                         setCategoryFilter(cat.name as any);
                         setBrandFilter(null);
                         setActiveTab("catalog");
                       }}
-                      className="group flex flex-col items-center gap-1.5 p-3 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-orange-50/20 hover:border-orange-100 transition duration-300"
+                      className="group flex flex-col items-center gap-1.5 p-3 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-orange-50/20 hover:border-orange-100 transition duration-350 cursor-pointer"
                     >
                       {/* Orange-gradient round circle backdrop */}
                       <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#FD6C1D] to-[#FD851D]/80 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 transition duration-300">
@@ -448,7 +453,7 @@ export default function App() {
                       <span className="text-[10px] font-bold text-slate-600 group-hover:text-[#FD6C1D] transition">
                         {cat.name}
                       </span>
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
@@ -470,11 +475,16 @@ export default function App() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3.5">
-                  {INITIAL_PRODUCTS.slice(0, 4).map(prod => {
+                  {INITIAL_PRODUCTS.slice(0, 4).map((prod, idx) => {
                     const isFav = favorites.includes(prod.id);
                     return (
-                      <div 
+                      <motion.div 
                         key={prod.id}
+                        initial={{ opacity: 0, y: 15 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-10px" }}
+                        transition={{ duration: 0.3, delay: idx * 0.05 }}
+                        whileTap={{ scale: 0.98 }}
                         className="bg-white border border-slate-100 rounded-2xl p-2.5 flex flex-col justify-between shadow-sm relative group hover:shadow-md hover:border-slate-200 transition duration-300"
                       >
                         {/* Favorite button */}
@@ -519,13 +529,14 @@ export default function App() {
                         </div>
 
                         {/* Buy Button */}
-                        <button 
+                        <motion.button 
+                          whileTap={{ scale: 0.93 }}
                           onClick={() => addToCart(prod)}
-                          className="w-full mt-2.5 py-2 text-[10px] font-extrabold text-white bg-gradient-to-r from-[#FD6C1D] to-[#FD851D] hover:brightness-105 rounded-xl transition duration-200 cursor-pointer active:scale-95 text-center shadow-sm"
+                          className="w-full mt-2.5 py-2 text-[10px] font-extrabold text-white bg-gradient-to-r from-[#FD6C1D] to-[#FD851D] hover:brightness-105 rounded-xl transition duration-200 cursor-pointer text-center shadow-sm"
                         >
                           Sotib olish
-                        </button>
-                      </div>
+                        </motion.button>
+                      </motion.div>
                     );
                   })}
                 </div>
@@ -595,17 +606,18 @@ export default function App() {
                 <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">Brendlar</span>
                 <div className="flex gap-2 overflow-x-auto pb-1.5 select-none no-scrollbar">
                   {["Macbook", "Windows", "Asus", "MSI", "Lenovo", "HP", "Dell"].map(brand => (
-                    <button
+                    <motion.button
                       key={brand}
+                      whileTap={{ scale: 0.90 }}
                       onClick={() => setBrandFilter(brandFilter === brand ? null : brand)}
-                      className={`px-4.5 py-2.5 rounded-xl border text-[10px] font-extrabold whitespace-nowrap transition-all duration-200 active:scale-95 flex items-center gap-1 min-h-[40px] uppercase tracking-wider ${
+                      className={`px-4.5 py-2.5 rounded-xl border text-[10px] font-extrabold whitespace-nowrap transition-all duration-200 flex items-center gap-1 min-h-[40px] uppercase tracking-wider ${
                         brandFilter === brand 
                           ? "bg-gradient-to-r from-[#FD6C1D] to-[#FD851D] text-white border-[#FD6C1D] shadow-md scale-102" 
                           : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
                       }`}
                     >
                       <span>{brand}</span>
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
@@ -613,11 +625,16 @@ export default function App() {
               {/* Catalog Product Grid - Figma Image 4 */}
               {filteredProducts.length > 0 ? (
                 <div className="grid grid-cols-2 gap-3">
-                  {filteredProducts.map(prod => {
+                  {filteredProducts.map((prod, idx) => {
                     const isFav = favorites.includes(prod.id);
                     return (
-                      <div 
+                      <motion.div 
                         key={prod.id}
+                        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                        whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-10px" }}
+                        transition={{ duration: 0.3, delay: Math.min(0.25, idx * 0.04) }}
+                        whileTap={{ scale: 0.98 }}
                         className="bg-white border border-slate-100 rounded-2xl p-2.5 flex flex-col justify-between shadow-sm relative group hover:shadow-md hover:border-slate-200 transition duration-300"
                       >
                         {/* Favorite button */}
@@ -657,13 +674,14 @@ export default function App() {
                         </div>
 
                         {/* Buy Button */}
-                        <button 
+                        <motion.button 
+                          whileTap={{ scale: 0.93 }}
                           onClick={() => addToCart(prod)}
-                          className="w-full mt-2.5 py-2 text-[10px] font-extrabold text-white bg-gradient-to-r from-[#FD6C1D] to-[#FD851D] hover:brightness-105 rounded-xl transition duration-200 cursor-pointer active:scale-95 text-center shadow-sm"
+                          className="w-full mt-2.5 py-2 text-[10px] font-extrabold text-white bg-gradient-to-r from-[#FD6C1D] to-[#FD851D] hover:brightness-105 rounded-xl transition duration-200 cursor-pointer text-center shadow-sm"
                         >
                           Sotib olish
-                        </button>
-                      </div>
+                        </motion.button>
+                      </motion.div>
                     );
                   })}
                 </div>
@@ -939,74 +957,111 @@ export default function App() {
         </div>
 
         {/* BOTTOM NAV BAR INTERFACE - Mirroring Home/Catalog bottom bars inside Figma images */}
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-150 flex justify-around items-center px-2 z-[90]">
-          <button 
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-150 flex justify-around items-center px-4 z-[90]">
+          <motion.button 
+            whileTap={{ scale: 0.88 }}
             onClick={() => {
               setActiveTab("home");
               setSelectedProduct(null);
             }}
-            className={`flex flex-col items-center justify-center w-12 h-12 transition ${
-              activeTab === "home" ? "text-[#FD6C1D]" : "text-slate-400 hover:text-slate-600"
+            className={`relative flex flex-col items-center justify-center w-14 h-13 rounded-2xl transition-all duration-300 ${
+              activeTab === "home" ? "text-[#FD6C1D] font-extrabold" : "text-slate-450 hover:text-slate-650"
             }`}
           >
+            {activeTab === "home" && (
+              <motion.div 
+                layoutId="activeTabPill"
+                className="absolute inset-0 bg-gradient-to-br from-orange-50/70 to-orange-100/40 rounded-2xl -z-10"
+                transition={{ type: "spring", stiffness: 350, damping: 25 }}
+              />
+            )}
             <HomeIcon className="w-5 h-5" />
             <span className="text-[8px] font-bold mt-0.5">Asosiy</span>
-          </button>
+          </motion.button>
 
-          <button 
+          <motion.button 
+            whileTap={{ scale: 0.88 }}
             onClick={() => {
               setActiveTab("catalog");
               setCategoryFilter(null);
               setBrandFilter(null);
               setSelectedProduct(null);
             }}
-            className={`flex flex-col items-center justify-center w-12 h-12 transition ${
-              activeTab === "catalog" ? "text-[#5A20D4]" : "text-slate-400 hover:text-slate-600"
+            className={`relative flex flex-col items-center justify-center w-14 h-13 rounded-2xl transition-all duration-300 ${
+              activeTab === "catalog" ? "text-[#5A20D4] font-extrabold" : "text-slate-450 hover:text-slate-655"
             }`}
           >
-            <SlidersHorizontal className="w-4 h-4" />
+            {activeTab === "catalog" && (
+              <motion.div 
+                layoutId="activeTabPill"
+                className="absolute inset-0 bg-gradient-to-br from-purple-50/80 to-purple-100/40 rounded-2xl -z-10"
+                transition={{ type: "spring", stiffness: 350, damping: 25 }}
+              />
+            )}
+            <SlidersHorizontal className="w-4.5 h-4.5" />
             <span className="text-[8px] font-bold mt-0.5">Katalog</span>
-          </button>
+          </motion.button>
 
-          <button 
+          <motion.button 
+            whileTap={{ scale: 0.88 }}
             onClick={() => {
               setActiveTab("ai");
               setSelectedProduct(null);
             }}
-            className={`flex flex-col items-center justify-center w-12 h-12 transition ${
-              activeTab === "ai" ? "text-[#FD6C1D]" : "text-slate-400 hover:text-slate-600"
+            className={`relative flex flex-col items-center justify-center w-14 h-13 rounded-2xl transition-all duration-300 ${
+              activeTab === "ai" ? "text-[#FD6C1D] font-extrabold" : "text-slate-450 hover:text-slate-655"
             }`}
           >
-            <Sparkles className="w-4 h-4 fill-current stroke-none animate-pulse" />
+            {activeTab === "ai" && (
+              <motion.div 
+                layoutId="activeTabPill"
+                className="absolute inset-0 bg-gradient-to-br from-orange-50/70 to-orange-100/40 rounded-2xl -z-10"
+                transition={{ type: "spring", stiffness: 350, damping: 25 }}
+              />
+            )}
+            <Sparkles className="w-4.5 h-4.5 fill-current stroke-none animate-pulse" />
             <span className="text-[8px] font-bold mt-0.5">Aqlli Tanlov</span>
-          </button>
+          </motion.button>
 
           {/* Cart triggers Drawer */}
-          <button 
+          <motion.button 
+            whileTap={{ scale: 0.88 }}
             onClick={() => setIsCartOpen(true)}
-            className="flex flex-col items-center justify-center w-12 h-12 text-slate-400 hover:text-slate-600 relative"
+            className="relative flex flex-col items-center justify-center w-14 h-13 rounded-2xl text-slate-450 hover:text-slate-655"
           >
             <ShoppingBag className="w-5 h-5" />
             <span className="text-[8px] font-bold mt-0.5">Savat</span>
             {cart.length > 0 && (
-              <span className="absolute top-1 right-2 bg-[#FD6C1D] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full">
+              <motion.span 
+                initial={{ scale: 0.4, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="absolute top-1 right-2 bg-[#FD6C1D] text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow"
+              >
                 {cart.reduce((s, it) => s + it.quantity, 0)}
-              </span>
+              </motion.span>
             )}
-          </button>
+          </motion.button>
 
-          <button 
+          <motion.button 
+            whileTap={{ scale: 0.88 }}
             onClick={() => {
               setActiveTab("profile");
               setSelectedProduct(null);
             }}
-            className={`flex flex-col items-center justify-center w-12 h-12 transition ${
-              activeTab === "profile" ? "text-[#5A20D4]" : "text-slate-400 hover:text-slate-600"
+            className={`relative flex flex-col items-center justify-center w-14 h-13 rounded-2xl transition-all duration-300 ${
+              activeTab === "profile" ? "text-[#5A20D4] font-extrabold" : "text-slate-450 hover:text-slate-655"
             }`}
           >
+            {activeTab === "profile" && (
+              <motion.div 
+                layoutId="activeTabPill"
+                className="absolute inset-0 bg-gradient-to-br from-purple-50/80 to-purple-100/40 rounded-2xl -z-10"
+                transition={{ type: "spring", stiffness: 350, damping: 25 }}
+              />
+            )}
             <User className="w-5 h-5" />
             <span className="text-[8px] font-bold mt-0.5">Profil</span>
-          </button>
+          </motion.button>
         </div>
 
         {/* 5. SEARCH BOX OVERLAY SCREEN - Mirroring Figma Images 10 & 11 */}
@@ -1394,7 +1449,16 @@ export default function App() {
                             <div className="flex-1 text-left min-w-0">
                               <span className="block text-xs font-bold text-slate-700 truncate">{item.product.name}</span>
                               <span className="block text-[10px] text-slate-400 font-semibold">{item.product.brand}</span>
-                              <span className="text-xs font-extrabold text-[#FD6C1D]">{item.product.price.toLocaleString("uz-UZ")} UZS</span>
+                              <div className="flex flex-col mt-0.5">
+                                <span className="text-xs font-extrabold text-[#FD6C1D]">
+                                  {(item.product.price * item.quantity).toLocaleString("uz-UZ")} UZS
+                                </span>
+                                {item.quantity > 1 && (
+                                  <span className="text-[9px] text-slate-400 font-medium leading-none mt-0.5">
+                                    (1 dona: {item.product.price.toLocaleString("uz-UZ")} UZS)
+                                  </span>
+                                )}
+                              </div>
                             </div>
 
                             {/* Incrementor counters */}
