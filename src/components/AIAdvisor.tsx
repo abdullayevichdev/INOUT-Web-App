@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Sparkles, BrainCircuit, Cpu, CircleDollarSign, Check, Flame, ChevronRight, Heart } from "lucide-react";
-import { Product } from "../types";
+import { Product, INITIAL_PRODUCTS } from "../types";
 
 interface AIAdvisorProps {
   onInstantBuy: (customProduct: Product) => void;
@@ -79,131 +79,261 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
     setResults(null);
     setLoadingStep(0);
 
-    // Dynamic messaging animation
+    // Dynamic offline matching message interval
     const interval = setInterval(() => {
       setLoadingStep(prev => (prev < 3 ? prev + 1 : prev));
-    }, 1200);
+    }, 400);
 
-    try {
-      const response = await fetch("/api/recommend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          purpose,
-          budget: `${(budget / 1000000).toFixed(1)} mln so'm`,
-          os,
-          battery,
-          software: software.join(", "),
-          brands: brands.join(", "),
-          additionalFeatures
-        })
-      });
+    // Completely client-side smart recommendation engine
+    setTimeout(() => {
+      try {
+        const scored = INITIAL_PRODUCTS
+          .filter(p => p.category === "Noutbuklar")
+          .map(product => {
+            let score = 50;
 
-      if (!response.ok) {
-        throw new Error("Tavsiya olish jarayonida xatolik yuz berdi");
+            // 1. Budget fit scoring
+            if (product.price <= budget) {
+              score += 30;
+              // Close to budget gets value-maximization points
+              if (product.price >= budget * 0.65) {
+                score += 15;
+              }
+            } else {
+              const ratio = product.price / budget;
+              if (ratio <= 1.25) {
+                score -= 10; // slightly over budget
+              } else {
+                score -= 40; // significantly over budget
+              }
+            }
+
+            // 2. Brand preference scoring
+            const pBrand = product.brand.toLowerCase();
+            const lowerBrands = brands.map(b => b.toLowerCase());
+            if (brands.length > 0) {
+              if (lowerBrands.includes(pBrand)) {
+                score += 25;
+              } else {
+                score -= 15;
+              }
+            }
+
+            // 3. Operating System scoring
+            const lowerOS = os.toLowerCase();
+            if (lowerOS === "macos") {
+              if (product.brand === "Macbook") {
+                score += 30;
+              } else {
+                score -= 50;
+              }
+            } else if (lowerOS === "windows") {
+              if (product.brand !== "Macbook") {
+                score += 25;
+              } else {
+                score -= 50;
+              }
+            } else if (lowerOS === "linux") {
+              if (product.brand !== "Macbook") {
+                score += 15;
+              } else {
+                score -= 30;
+              }
+            }
+
+            // 4. Purpose & Software optimization scoring
+            const pNameLower = product.name.toLowerCase();
+            const pDescLower = product.description.toLowerCase();
+            const pCpuLower = product.specs.cpu.toLowerCase();
+            const pGpuLower = product.specs.gpu.toLowerCase();
+
+            if (purpose === "Dasturlash va IT") {
+              if (product.specs.ram.includes("16 GB") || product.specs.ram.includes("32 GB") || product.specs.ram.includes("48 GB")) {
+                score += 25;
+              }
+              if (pCpuLower.includes("i7") || pCpuLower.includes("i9") || pCpuLower.includes("ryzen 7") || pCpuLower.includes("ryzen 9") || pCpuLower.includes("m3") || pCpuLower.includes("m2")) {
+                score += 15;
+              }
+              if (software.some(s => s.toLowerCase().includes("vs code") || s.toLowerCase().includes("intellij"))) {
+                score += 10;
+              }
+            } else if (purpose === "Grafik Dizayn va Video montaj") {
+              if (pGpuLower.includes("rtx") || pGpuLower.includes("geforce") || pCpuLower.includes("m3 pro") || pCpuLower.includes("m3 max")) {
+                score += 25;
+              }
+              if (product.specs.screenType.toLowerCase().includes("oled") || product.specs.screenType.toLowerCase().includes("retina")) {
+                score += 15;
+              }
+              if (software.some(s => s.toLowerCase().includes("photoshop") || s.toLowerCase().includes("premiere") || s.toLowerCase().includes("after") || s.toLowerCase().includes("figma") || s.toLowerCase().includes("3ds") || s.toLowerCase().includes("autocad"))) {
+                score += 15;
+              }
+            } else if (purpose === "Geyming / Kuchli o'yinlar") {
+              if (pGpuLower.includes("rtx") || pGpuLower.includes("geforce")) {
+                score += 35;
+                if (pGpuLower.includes("4070") || pGpuLower.includes("4080") || pGpuLower.includes("4090")) {
+                  score += 15;
+                }
+              }
+              if (product.specs.screenType.toLowerCase().includes("144hz") || product.specs.screenType.toLowerCase().includes("165hz") || product.specs.screenType.toLowerCase().includes("240hz")) {
+                score += 15;
+              }
+              if (software.some(s => s.toLowerCase().includes("pubg") || s.toLowerCase().includes("gta") || s.toLowerCase().includes("cyberpunk"))) {
+                score += 10;
+              }
+              if (pCpuLower.includes("celeron") || pCpuLower.includes("pentium") || pGpuLower.includes("600")) {
+                score -= 60; // completely unqualified for deep gaming
+              }
+            } else if (purpose === "Ofis directs va hujjatlar") {
+              if (product.price <= 12000000) {
+                score += 25;
+              }
+              if (software.some(s => s.toLowerCase().includes("excel") || s.toLowerCase().includes("word"))) {
+                score += 10;
+              }
+            } else if (purpose === "Kundalik darslar va YouTube") {
+              if (product.price <= 9000000) {
+                score += 30;
+              }
+            }
+
+            // 5. Battery efficiency preference
+            if (battery === "Ha, juda muhim") {
+              if (product.brand === "Macbook") {
+                score += 20;
+              } else if (pCpuLower.includes("u") || pCpuLower.includes("ultra") || pCpuLower.includes("7535hs") || pCpuLower.includes("1335u") || pCpuLower.includes("1235u")) {
+                score += 15;
+              }
+              if (pCpuLower.includes("hx") || pNameLower.includes("katana") || pNameLower.includes("alienware") || pNameLower.includes("strix")) {
+                score -= 15; // gaming powerhouses consume a lot of run-time battery
+              }
+            }
+
+            // 6. Fuzzy keyword matching for specific custom features
+            if (additionalFeatures.trim()) {
+              const queryWords = additionalFeatures.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+              queryWords.forEach(word => {
+                if (pNameLower.includes(word) || pDescLower.includes(word) || product.specs.screenType.toLowerCase().includes(word) || product.specs.screenSize.toLowerCase().includes(word)) {
+                  score += 8;
+                }
+              });
+            }
+
+            return { product, score };
+          });
+
+        // Sorted recommendations descending
+        scored.sort((a, b) => b.score - a.score);
+
+        const recommendations = scored.slice(0, 3).map((item, idx) => {
+          const p = item.product;
+          const reasons: string[] = [];
+
+          if (p.price <= budget) {
+            reasons.push(`Ushbu model siz kiritgan byudjetga (${(budget / 1000000).toFixed(1)} mln so'm) to'liq rioya qiladi va yuqori darajada tejaydi.`);
+          } else {
+            reasons.push(`Xaridorlarning talabini mukammal bajarish uchun byudjetingizga juda yaqin narxdagi eng optimal premium variant saralandi.`);
+          }
+
+          if (purpose === "Dasturlash va IT") {
+            reasons.push(`Tezkor algoritmlar, testlash hamda VS Code / IntelliJ uchun kuchli ${p.specs.cpu} protsessori hamda ${p.specs.ram} tezkor xotirasi bilan mukammal integratsiya.`);
+          } else if (purpose === "Grafik Dizayn va Video montaj") {
+            reasons.push(`Rang uzatishning yuqori darajasi (${p.specs.screenType}) va professional grafik renderlash (${p.specs.gpu}) tufayli ijodiy ishlarga juda mos.`);
+          } else if (purpose === "Geyming / Kuchli o'yinlar") {
+            reasons.push(`Eng og'ir kadrli o'yinlarda yuqori unumdorlik va quloqlarni charchatmaydigan termal sovutish tizimi hamda ${p.specs.gpu} videokartasi.`);
+          } else {
+            reasons.push(`Kundalik hayot, sifatli darslar, veb-surfing hamda dars loyihalari uchun hamyonbop va mutlaqo qulay apparat unumdorligi.`);
+          }
+
+          if (p.brand === "Macbook") {
+            reasons.push("Ekologik materiallar hamda nozik dizayndagi korpus, ajoyib klaviatura va 15-20 soatgacha yetadigan energiya zaxirasi.");
+          } else if (p.brand === "Lenovo" && p.name.includes("ThinkPad")) {
+            reasons.push("Biznes darajasidagi titanga to'la mustahkam qurilma, ideal xavfsizlik va barmoqlarni charchatmaydigan patentlangan drayverli klaviatura.");
+          } else {
+            reasons.push("Raqobatbardosh narx, ishonchli mexanik qismlar va bozorda xizmat ko'rsatish shoxobchalarining juda kengligi.");
+          }
+
+          const pros: string[] = [];
+          const cons: string[] = [];
+
+          // Dynamic pros map
+          if (p.specs.screenType.toLowerCase().includes("oled")) {
+            pros.push("O'ta yorqin va tiniq 120Hz/240Hz OLED professional displey");
+          } else if (p.specs.screenType.toLowerCase().includes("retina")) {
+            pros.push("Premium Retina silliq displey, maksimal ko'z himoyasi");
+          } else {
+            pros.push("Keng burchakli yuqori aniqlikdagi IPS displey");
+          }
+
+          if (parseFloat(p.specs.ram) >= 16) {
+            pros.push(`Ko'p vazifali ishlash uchun juda katta tezkor xotira (${p.specs.ram})`);
+          } else {
+            pros.push(`Tejamkor va barqaror tizim platasi (${p.specs.ram})`);
+          }
+
+          if (p.specs.gpu.toLowerCase().includes("rtx")) {
+            pros.push(`O'yinlar va 3D renderlar uchun nurlarni kuzatuvchi RTX videokartasi (${p.specs.gpu})`);
+          } else if (p.brand === "Macbook") {
+            pros.push("Har qanday zaryadlash moslamasiz uzoq ishlovchi yuqori zaxira batareyasi");
+          } else {
+            pros.push("Silliq dars loyihalari uchun ideal ichki grafik protsessor");
+          }
+
+          // Dynamic cons map
+          if (p.specs.gpu.toLowerCase().includes("rtx") && !p.name.includes("Slim") && !p.name.includes("Zephyrus")) {
+            cons.push("Yuqori quvvat talab qilganligi sababli og'irroq quvvatlagich bloki");
+            cons.push("Maksimal o'yin renderlarida fan tovushi kuchayadi");
+          } else if (p.brand === "Macbook" && p.specs.ram.includes("8 GB")) {
+            cons.push("Kelajakda RAM xotirasini mustaqil uy sharoitida kengaytirib bo'lmaydi");
+          } else if (p.price < 6000000) {
+            cons.push("Murakkab 3D modellashtirish va eng og'ir 2024+ yillardagi o'yinlarga mo'ljallanmagan");
+          } else {
+            cons.push("Tavsiya mezonlari ofisga ko'proq ulanadi");
+          }
+
+          if (cons.length === 0) {
+            cons.push("Sensorli ekran faqat ma'lum burchaklarda mukammal sezgirlikka ega");
+          }
+
+          const matchPct = Math.min(99, Math.max(82, 80 + Math.floor(item.score / 2.5)));
+
+          return {
+            laptopName: p.name,
+            suitableSpecs: `${p.specs.cpu}, ${p.specs.ram}, ${p.specs.storage}`,
+            priceEstimation: `${p.price.toLocaleString("uz-UZ")} UZS`,
+            matchPercentage: matchPct,
+            reasons,
+            pros,
+            cons
+          };
+        });
+
+        clearInterval(interval);
+        setResults(recommendations);
+      } catch (err: any) {
+        clearInterval(interval);
+        setError("Tahlil qilishda kutilmagan xatolik yuz berdi. Qayta urinib ko'ring.");
+      } finally {
+        setLoading(false);
       }
-
-      const data = await response.json();
-      setResults(data.recommendations || []);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Ulanish xatosi. Iltimos qaytadan urinib ko'ring.");
-    } finally {
-      clearInterval(interval);
-      setLoading(false);
-    }
+    }, 1500);
   };
 
   const convertToProduct = (rec: LaptopRecommendation, idx: number = 0): Product => {
-    // Generate a secure mock image based on brand name and list index to avoid duplicated images
-    const bLower = rec.laptopName.toLowerCase();
-    let img = "";
-    let brand: Product["brand"] = "Windows";
-
-    if (bLower.includes("mac") || bLower.includes("apple") || bLower.includes("book")) {
-      const macImages = [
-        "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=600&q=80",
-        "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=80",
-        "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=600&q=80"
-      ];
-      img = macImages[idx % macImages.length];
-      brand = "Macbook";
-    } else if (bLower.includes("thinkpad") || bLower.includes("lenovo") || bLower.includes("legion")) {
-      const lenovoImages = [
-        "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=600&q=80",
-        "https://images.unsplash.com/photo-1618424181497-157f25b6ddd5?auto=format&fit=crop&w=600&q=80",
-        "https://images.unsplash.com/photo-1629429408209-1f912961dbd8?auto=format&fit=crop&w=600&q=80"
-      ];
-      img = lenovoImages[idx % lenovoImages.length];
-      brand = "Lenovo";
-    } else if (bLower.includes("rog") || bLower.includes("asus") || bLower.includes("zenbook") || bLower.includes("tuf")) {
-      const asusImages = [
-        "https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=600&q=80",
-        "https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=600&q=80"
-      ];
-      img = asusImages[idx % asusImages.length];
-      brand = "Asus";
-    } else if (bLower.includes("katana") || bLower.includes("msi")) {
-      img = "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?auto=format&fit=crop&w=600&q=80";
-      brand = "MSI";
-    } else if (bLower.includes("hp") || bLower.includes("victus") || bLower.includes("pavilion")) {
-      const hpImages = [
-        "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=600&q=80",
-        "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=600&q=80"
-      ];
-      img = hpImages[idx % hpImages.length];
-      brand = "HP";
-    } else if (bLower.includes("dell") || bLower.includes("latitude") || bLower.includes("precision") || bLower.includes("xps")) {
-      const dellImages = [
-        "https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?auto=format&fit=crop&w=600&q=80",
-        "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?auto=format&fit=crop&w=600&q=80",
-        "https://images.unsplash.com/photo-1625766763788-95dcce9bf5ac?auto=format&fit=crop&w=600&q=80"
-      ];
-      img = dellImages[idx % dellImages.length];
-      brand = "Dell";
-    } else {
-      const fallbacks = [
-        "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=600&q=80",
-        "https://images.unsplash.com/photo-1625766763788-95dcce9bf5ac?auto=format&fit=crop&w=600&q=80",
-        "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?auto=format&fit=crop&w=600&q=80"
-      ];
-      img = fallbacks[idx % fallbacks.length];
-      brand = "Windows";
+    // Find matching product dynamically to ensure real purchase mapped successfully
+    const matched = INITIAL_PRODUCTS.find(p => p.name === rec.laptopName);
+    if (matched) {
+      return matched;
     }
-
-    // Parse price estimation string back to number
-    const numPrice = parseInt(rec.priceEstimation.replace(/[^0-9]/g, "")) || 12000000;
-
-    return {
-      id: `ai-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-      name: rec.laptopName,
-      brand,
-      category: "Noutbuklar",
-      price: numPrice,
-      imageUrl: img,
-      description: rec.reasons.join(". "),
-      rating: +(rec.matchPercentage / 20).toFixed(1),
-      specs: {
-        brandAndModel: rec.laptopName,
-        cpu: rec.suitableSpecs.split(",")[0] || "Yuqori darajali protsessor",
-        ram: rec.suitableSpecs.split(",")[1] || "16 GB DDR5",
-        storage: rec.suitableSpecs.split(",")[2] || "512 GB high-speed SSD",
-        gpu: rec.suitableSpecs.split(",")[3] || "Intel Iris Graphics",
-        screenSize: "14-16 dyum",
-        screenType: "Yuqori tiniqlikdagi IPS/OLED",
-        batteryHealth: "100%",
-        exteriorCondition: "Mutlaqo Yangi",
-        batteryCycleCount: 0,
-        boxAndAccessories: "To'liq quti, original quvvatlagich"
-      }
-    };
+    
+    // safe fallback
+    return INITIAL_PRODUCTS[0];
   };
 
   const loadingMessages = [
-    "Talablaringiz o'rganilmoqda...",
-    "Protsessor va tezkor xotira mezonlari hisoblanmoqda...",
-    "Gemini AI eng zo'r modellarni taqqoslamoqda...",
-    "Eng yaxshi kelishuvlar saralanmoqda..."
+    "Kiritilgan talablar tahlil qilinmoqda...",
+    "Protsessor unumdorligi va tezkor xotira mezonlari tekshirilmoqda...",
+    "Siz kiritgan byudjet doirasidagi eng yaxshi kelishuvlar saralanmoqda...",
+    "Omborda mavjud modellar bilan solishtirilmoqda..."
   ];
 
   return (
@@ -211,7 +341,7 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
       {/* Top clean micro-header matching screenshot */}
       <div className="bg-slate-100/60 px-5 py-2.5 border-b border-slate-100 flex items-center justify-between text-left select-none">
         <span className="text-[11px] font-bold text-slate-400 tracking-wide font-sans">
-          Ai yordamchi | Ai asistent
+          Smart Tanlov | Aqlli Maslahatchi
         </span>
       </div>
 
@@ -224,13 +354,13 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
           {/* Text Column */}
           <div className="text-left space-y-1.5 min-w-0">
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-[#ADF762] text-slate-950 shadow-sm">
-              <Sparkles className="w-2.5 h-2.5 fill-slate-950" /> Gemini AI Yordamchi
+              <Sparkles className="w-2.5 h-2.5 fill-slate-950" /> Smart Qidiruv Tizimi
             </span>
             <h1 className="text-base sm:text-lg font-black font-display tracking-tight text-[#FFFFFF] leading-snug uppercase">
               O'ZINGIZGA MOSINI TOPING!
             </h1>
             <p className="text-[10px] text-purple-100 leading-relaxed font-sans opacity-95">
-              Sizga qanday noutbuk mos kelishini bilmayapsizmi? Sun'iy intellekt maxsus so'rovnoma orqali sizga mukammal noutbukni tanlab beradi!
+              Sizga qanday noutbuk mos kelishi xususida ikkilanyapsizmi? Bizning aqlli tizimimiz siz uchun mukammal noutbukni bir zumda saralab beradi!
             </p>
           </div>
         </div>
@@ -429,7 +559,7 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
               </div>
               <div className="space-y-2">
                 <h3 className="text-base font-bold text-slate-800">
-                  Sun'iy intellekt tahlil qilmoqda...
+                  Aqlli tizim tahlil qilmoqda...
                 </h3>
                 <AnimatePresence mode="wait">
                   <motion.p 

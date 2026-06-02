@@ -107,8 +107,8 @@ export default function App() {
     },
     {
       id: 2,
-      title: "AI-Yordamchi bilan tanlang",
-      subtitle: "Gemini sun'iy intellekti siz uchun noutbuk izlaydi",
+      title: "Aqlli Tizim bilan tanlang",
+      subtitle: "Smart qidiruv tizimi siz uchun eng mos noutbukni tanlab beradi",
       bgColor: "from-[#5A20D4] to-[#481AAA]",
       image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80"
     },
@@ -978,7 +978,7 @@ export default function App() {
             }`}
           >
             <Sparkles className="w-4 h-4 fill-current stroke-none animate-pulse" />
-            <span className="text-[8px] font-bold mt-0.5">AI Yordamchi</span>
+            <span className="text-[8px] font-bold mt-0.5">Aqlli Tanlov</span>
           </button>
 
           {/* Cart triggers Drawer */}
