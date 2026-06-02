@@ -1,0 +1,6 @@
+{
+  "name": "Design Conversion Workspace",
+  "description": "Professional environment for converting Figma designs into production-ready React and TypeScript code.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
