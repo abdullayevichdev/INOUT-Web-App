@@ -27,7 +27,11 @@ import {
   ShieldCheck,
   Download,
   Wifi,
-  WifiOff
+  WifiOff,
+  Share,
+  MoreVertical,
+  Laptop,
+  Smartphone
 } from "lucide-react";
 import { 
   Product, 
@@ -51,6 +55,8 @@ export default function App() {
   const [showNetworkToast, setShowNetworkToast] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
   const [toastType, setToastType] = useState<"online" | "offline">("online");
+  const [showPwaGuide, setShowPwaGuide] = useState(false);
+  const [activeGuideTab, setActiveGuideTab] = useState<"ios" | "android" | "pc">("ios");
 
   // Core App states
   const [activeTab, setActiveTab] = useState<"home" | "catalog" | "ai" | "profile">("home");
@@ -202,6 +208,13 @@ export default function App() {
     }
     setDeferredPrompt(null);
     setShowInstallBanner(false);
+  };
+
+  const handleGuideItemClick = () => {
+    setToastMessage("E'tibor bering: bu shunchaki qo'llanma rasmidir. Haqiqiy o'rnatish uchun brauzeringiz boshqaruv elementidan foydalaning!");
+    setToastType("offline"); // highlighted amber/red color for alert
+    setShowNetworkToast(true);
+    setTimeout(() => setShowNetworkToast(false), 5000);
   };
 
   // Rotate promo carousel is manual only to ensure stability against unprompted movement
@@ -926,24 +939,25 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-white/5 flex gap-2 justify-end relative z-10">
-                    {deferredPrompt ? (
-                      <button
-                        onClick={triggerPWAInstall}
-                        className="bg-[#FD6C1D] hover:bg-[#FD851D] text-white text-[10px] font-black uppercase tracking-wider px-4 py-2.5 rounded-xl transition cursor-pointer active:scale-95 shadow"
-                      >
-                        Ilovani o'rnatish
-                      </button>
-                    ) : (
-                      <div className="flex flex-col w-full text-slate-400 text-[9px] font-medium leading-relaxed gap-1">
-                        <span className="text-[#ADF762] font-semibold flex items-center gap-1">
-                          🟢 Ilova PWA (Progressive Web App) holatida ishlamoqda
-                        </span>
-                        <span>
-                          Agar xohlasangiz, Safari yoki Chrome menyusidan <b className="text-white">"Ekraningizga qo'shish"</b> bandini tanlab mustaqil o'rnatishingiz ham mumkin.
-                        </span>
-                      </div>
-                    )}
+                  <div className="mt-4 pt-3 border-t border-white/5 flex flex-col gap-2 relative z-10 w-full">
+                    <button
+                      onClick={() => {
+                        if (deferredPrompt) {
+                          triggerPWAInstall();
+                        } else {
+                          setShowPwaGuide(true);
+                        }
+                      }}
+                      className="w-full bg-gradient-to-r from-[#FD6C1D] to-[#FD851D] hover:from-[#FD851D] hover:to-[#FD6C1D] text-white text-[10.5px] font-black uppercase tracking-wider py-3 rounded-2xl transition-all cursor-pointer active:scale-95 shadow-md flex items-center justify-center gap-1.5"
+                    >
+                      <Download className="w-4 h-4" />
+                      O'rnatib olish
+                    </button>
+                    
+                    <span className="text-[#ADF762] font-semibold text-[9px] flex items-center gap-1.5 justify-center leading-none mt-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block shrink-0" />
+                      Avtomatik yangilanadigan zamonaviy PWA ilova
+                    </span>
                   </div>
                 </motion.div>
 
@@ -1856,6 +1870,221 @@ export default function App() {
                 </div>
               )}
             </motion.div>
+          )}
+        </AnimatePresence>
+        {/* PWA CUSTOM INTERACTIVE GUIDE MODAL */}
+        <AnimatePresence>
+          {showPwaGuide && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+              {/* Glass backdrop overlay */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowPwaGuide(false)}
+                className="absolute inset-0 bg-slate-950/70 backdrop-blur-md"
+              />
+
+              {/* Guide Contents */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 30 }}
+                transition={{ type: "spring", damping: 25, stiffness: 350 }}
+                className="bg-white rounded-3xl w-full max-w-sm overflow-hidden border border-slate-100 shadow-2xl relative z-10 text-left"
+              >
+                {/* Header graphic background */}
+                <div className="bg-gradient-to-r from-[#5A20D4] to-[#7B3FE4] p-5 text-white relative">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-xl translate-x-4 -translate-y-4" />
+                  <button
+                    onClick={() => setShowPwaGuide(false)}
+                    className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white p-1.5 rounded-full transition cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <span className="text-[9px] font-black uppercase tracking-widest bg-[#ADF762] text-slate-900 px-2.5 py-0.5 rounded-full inline-block mb-1 shadow-sm">
+                    Qo'llanma
+                  </span>
+                  <h3 className="text-sm font-black uppercase tracking-wide">
+                    iNout Ilovasini O'rnatish
+                  </h3>
+                  <p className="text-[10px] text-purple-100 leading-normal mt-1">
+                    Ilovani smartfoningiz yoki kompyuteringiz displeyiga bepul o'rnating va internet aloqasisiz ham ishlash qulayligidan foydalaning.
+                  </p>
+                </div>
+
+                {/* If open inside AI Studio developer iframe, show a tab launcher */}
+                {typeof window !== "undefined" && window.self !== window.top && (
+                  <div className="p-4 bg-amber-50 border-b border-amber-100 flex flex-col gap-2">
+                    <div className="text-[10.5px] text-amber-900 font-bold leading-relaxed text-left flex items-start gap-1.5">
+                      <span className="text-sm">⚠️</span>
+                      <span>
+                        <b>AI Studio Cheklovi:</b> Siz hozir dasturchi rejimi (iframe) ichidasiz. Ushbu rejimda brauzer mutlaqo o'rnatishni taqiqlaydi.
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => window.open(window.location.href, "_blank")}
+                      className="w-full bg-[#5A20D4] hover:bg-[#42179E] text-white text-[10px] font-black uppercase tracking-wider py-3 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md active:scale-95"
+                    >
+                      <Share className="w-3.5 h-3.5" />
+                      Yangi Tabda Ochish (O'rnatish uchun)
+                    </button>
+                  </div>
+                )}
+
+                {/* Device Selector Tabs */}
+                <div className="flex border-b border-slate-100 bg-slate-50 p-2 gap-1.5 select-none font-sans font-bold text-[10px] uppercase tracking-wide">
+                  <button
+                    onClick={() => setActiveGuideTab("ios")}
+                    className={`flex-1 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      activeGuideTab === "ios"
+                        ? "bg-white text-[#5A20D4] shadow-sm border border-slate-150"
+                        : "text-slate-500 hover:text-slate-800"
+                    }`}
+                  >
+                    <Smartphone className="w-3.5 h-3.5 text-slate-500" />
+                    iOS (iPhone)
+                  </button>
+                  <button
+                    onClick={() => setActiveGuideTab("android")}
+                    className={`flex-1 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      activeGuideTab === "android"
+                        ? "bg-white text-[#5A20D4] shadow-sm border border-slate-150"
+                        : "text-slate-500 hover:text-slate-800"
+                    }`}
+                  >
+                    <Smartphone className="w-3.5 h-3.5 text-emerald-500" />
+                    Android
+                  </button>
+                  <button
+                    onClick={() => setActiveGuideTab("pc")}
+                    className={`flex-1 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      activeGuideTab === "pc"
+                        ? "bg-white text-[#5A20D4] shadow-sm border border-slate-150"
+                        : "text-slate-500 hover:text-slate-800"
+                    }`}
+                  >
+                    <Laptop className="w-3.5 h-3.5 text-indigo-500" />
+                    PC
+                  </button>
+                </div>
+
+                {/* Warning about mock interaction to prevent confusion */}
+                <div className="px-5 pt-3 text-[9.5px] text-slate-500 leading-normal bg-slate-50/50 pb-1 italic font-medium">
+                  💡 Quyidagi ko'rinishlar faqat <b>rasm-ko'rsatgich</b> xolos. Ularni bosganda o'rnatish bajarilmaydi, o'rnatishni o'z brauzeringiz menyusidan amalga oshirasiz.
+                </div>
+
+                {/* Steps Content Area with custom visualizations */}
+                <div className="p-5 space-y-4 max-h-[280px] overflow-y-auto no-scrollbar">
+                  {activeGuideTab === "ios" && (
+                    <div className="space-y-3">
+                      <div className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-purple-50 text-[#5A20D4] border border-purple-100 text-[10px] font-black flex items-center justify-center shrink-0">1</span>
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          <b>Safari</b> brauzerida ushbu sahifani ochganingizga ishonch hosil qiling.
+                        </p>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-purple-50 text-[#5A20D4] border border-purple-100 text-[10px] font-black flex items-center justify-center shrink-0">2</span>
+                        <div className="text-[11px] text-slate-600 leading-relaxed flex-1 space-y-1">
+                          <span>Pastki paneldagi <b>"Ulashish (Share)"</b> tugmasini bosing:</span>
+                          <div 
+                            onClick={handleGuideItemClick}
+                            className="mt-1 p-2 border border-slate-200 bg-slate-50 hover:bg-slate-100 rounded-xl inline-flex items-center gap-1.5 font-bold text-[10px] text-[#5A20D4] cursor-pointer"
+                          >
+                            <Share className="w-4 h-4 text-[#5A20D4]" />
+                            Ulashish (Share)
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-purple-50 text-[#5A20D4] border border-purple-100 text-[10px] font-black flex items-center justify-center shrink-0">3</span>
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          Menyuni pastga surib, <b>"Asosiy ekranga qo'shish"</b> (<i>Add to Home Screen</i>) bandini tanlang.
+                        </p>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-purple-50 text-[#5A20D4] border border-purple-100 text-[10px] font-black flex items-center justify-center shrink-0">4</span>
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          O'ng yuqoridagi <b>"Qo'shish (Add)"</b> tugmasini bosing va ilovadan foydalaning!
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeGuideTab === "android" && (
+                    <div className="space-y-3">
+                      <div className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] font-black flex items-center justify-center shrink-0">1</span>
+                        <div className="text-[11px] text-slate-600 leading-relaxed flex-1 space-y-1">
+                          <span>Brauzer yuqorisida yoki pastida chiqadigan <b>"iNout-ni ekranga qo'shish"</b> taklifini bosing:</span>
+                          <div className="flex justify-end mt-1">
+                            <button
+                              onClick={handleGuideItemClick}
+                              className="text-[9px] font-black text-white bg-[#FD6C1D] hover:bg-[#FD851D] px-2.5 py-1.5 rounded-xl uppercase tracking-wider cursor-pointer"
+                            >
+                              Ilovani o'rnatish
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] font-black flex items-center justify-center shrink-0">2</span>
+                        <div className="text-[11px] text-slate-600 leading-relaxed flex-1 space-y-1">
+                          <span>Agar taklif chiqmagan bo'lsa, brauzerning o'ng chetidagi <b>uchta nuqta</b> (<MoreVertical className="inline-block w-3.5 h-3.5 text-slate-500" />) tugmasini bosing.</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] font-black flex items-center justify-center shrink-0">3</span>
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          Menyudan <b>"Ilovani o'rnatish"</b> (<i>Install app</i>) yoki <b>"Asosiy ekranga qo'shish"</b> bandini tanlang.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeGuideTab === "pc" && (
+                    <div className="space-y-3">
+                      <div className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 text-[10px] font-black flex items-center justify-center shrink-0">1</span>
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          <b>Google Chrome</b> yoki <b>Microsoft Edge</b> manzil qatorining eng o'ng qismiga qarang.
+                        </p>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 text-[10px] font-black flex items-center justify-center shrink-0">2</span>
+                        <div className="text-[11px] text-slate-600 leading-relaxed flex-1 space-y-1">
+                          <span>Manzil yonidagi monitor/pastga yo'nalgan strelka <b>o'rnatish belgisini</b> bosing:</span>
+                          <div 
+                            onClick={handleGuideItemClick}
+                            className="mt-1.5 p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl inline-flex items-center gap-1 text-[10px] font-extrabold text-[#5A20D4] cursor-pointer"
+                          >
+                            <Download className="w-3.5 h-3.5 text-[#5A20D4]" />
+                            O'rnatish / Install
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 text-[10px] font-black flex items-center justify-center shrink-0">3</span>
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          <b>"O'rnatish (Install)"</b> buyrug'ini bosing. Ilova darchasi darhol monitorda mustaqil dastur kabi ochiladi!
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer close CTA */}
+                <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                  <button
+                    onClick={() => setShowPwaGuide(false)}
+                    className="px-5 py-2.5 bg-slate-800 hover:bg-slate-950 text-white rounded-xl text-[10px] font-black uppercase tracking-wider cursor-pointer transition active:scale-95 shadow-sm"
+                  >
+                    Tushunarli
+                  </button>
+                </div>
+              </motion.div>
+            </div>
           )}
         </AnimatePresence>
       </div>
