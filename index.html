@@ -13,6 +13,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="iNout" />
     <meta name="description" content="O'zbekistondagi birinchi aqlli va professional noutbuklar do'koni. Mukammal noutbukingizni bir zumda tanlang!" />
+    <!-- Pre-emptively capture PWA Install prompt before React loads -->
+    <script>
+      window.deferredPrompt = null;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        window.deferredPrompt = e;
+        window.dispatchEvent(new CustomEvent('pwa-prompt-available', { detail: e }));
+        console.log(' PWA Install prompt captured early in HTML!');
+      });
+    </script>
   </head>
   <body class="bg-slate-50 overflow-x-hidden antialiased">
     <div id="root"></div>

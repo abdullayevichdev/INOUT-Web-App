@@ -157,10 +157,23 @@ export default function App() {
 
   // PWA & Network Integrity Monitoring
   useEffect(() => {
-    const handleBeforeInstallPrompt = (e: Event) => {
+    // Check if prompt was already captured by index.html early-listener
+    if ((window as any).deferredPrompt) {
+      setDeferredPrompt((window as any).deferredPrompt);
+      setShowInstallBanner(true);
+    }
+
+    const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setShowInstallBanner(true);
+    };
+
+    const handleCustomPromptAvailable = (e: any) => {
+      if (e.detail) {
+        setDeferredPrompt(e.detail);
+        setShowInstallBanner(true);
+      }
     };
 
     const handleOnline = () => {
@@ -180,6 +193,7 @@ export default function App() {
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('pwa-prompt-available', handleCustomPromptAvailable);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
@@ -192,6 +206,7 @@ export default function App() {
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('pwa-prompt-available', handleCustomPromptAvailable);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };

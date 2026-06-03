@@ -4,6 +4,7 @@ const CACHE_NAME = "inout-pwa-v1";
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",
+  "/icon.png",
   "/icon.svg",
   "/manifest.json"
 ];
