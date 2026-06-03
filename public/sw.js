@@ -51,13 +51,20 @@ self.addEventListener("fetch", (event) => {
       event.respondWith(
         fetch(event.request)
           .then((networkResponse) => {
-            return caches.open(CACHE_NAME).then((cache) => {
-              // Cache successful API responses
-              if (networkResponse.status === 200) {
-                cache.put(event.request, networkResponse.clone());
+            // Cache successful API responses
+            if (networkResponse && networkResponse.status === 200) {
+              try {
+                if (!networkResponse.bodyUsed) {
+                  const responseToCache = networkResponse.clone();
+                  caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(event.request, responseToCache).catch(() => {});
+                  });
+                }
+              } catch (cloneErr) {
+                console.warn("[Service Worker] API response clone skipped:", cloneErr);
               }
-              return networkResponse;
-            });
+            }
+            return networkResponse;
           })
           .catch(() => {
             // Offline fallback for APIs
@@ -83,14 +90,29 @@ self.addEventListener("fetch", (event) => {
         caches.match(event.request).then((cachedResponse) => {
           const fetchPromise = fetch(event.request).then((networkResponse) => {
             if (networkResponse && networkResponse.status === 200) {
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, networkResponse.clone());
-              });
+              try {
+                if (!networkResponse.bodyUsed) {
+                  const responseToCache = networkResponse.clone();
+                  caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(event.request, responseToCache).catch(() => {});
+                  });
+                }
+              } catch (cloneErr) {
+                console.warn("[Service Worker] Static response clone skipped:", cloneErr);
+              }
             }
             return networkResponse;
           }).catch(() => null);
 
-          return cachedResponse || fetchPromise;
+          if (cachedResponse) {
+            // Tell the browser to keep the Service Worker alive to complete background caching
+            if (fetchPromise) {
+              event.waitUntil(fetchPromise);
+            }
+            return cachedResponse;
+          }
+
+          return fetchPromise;
         })
       );
     }
