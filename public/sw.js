@@ -4,9 +4,6 @@ const CACHE_NAME = "inout-pwa-v1";
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",
-  "/src/main.tsx",
-  "/src/App.tsx",
-  "/src/index.css",
   "/icon.svg",
   "/manifest.json"
 ];
@@ -39,6 +36,11 @@ self.addEventListener("activate", (event) => {
 
 // Fetch Event - Stale-While-Revalidate for app assets, and Network-First for APIs
 self.addEventListener("fetch", (event) => {
+  // Only process HTTP/HTTPS GET requests
+  if (event.request.method !== "GET" || !event.request.url.startsWith("http")) {
+    return;
+  }
+
   const reqUrl = new URL(event.request.url);
 
   // If fetching local app endpoints or static resources
