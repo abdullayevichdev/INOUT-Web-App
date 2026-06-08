@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Sparkles, BrainCircuit, Cpu, CircleDollarSign, Check, Flame, ChevronRight, Heart } from "lucide-react";
-import { Product, INITIAL_PRODUCTS } from "../types";
+import { Product } from "../types";
 
 interface AIAdvisorProps {
   onInstantBuy: (customProduct: Product) => void;
   favorites: string[];
   toggleFavorite: (id: string) => void;
+  products: Product[];
 }
 
 interface LaptopRecommendation {
@@ -19,8 +20,8 @@ interface LaptopRecommendation {
   cons: string[];
 }
 
-export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: AIAdvisorProps) {
-  const [purpose, setPurpose] = useState("Dasturlash va IT");
+export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite, products }: AIAdvisorProps) {
+  const [purposes, setPurposes] = useState<string[]>(["Dasturlash va IT"]);
   const [budget, setBudget] = useState<number>(12000000);
   const [os, setOs] = useState("Windows");
   const [battery, setBattery] = useState("Ha, juda muhim");
@@ -87,7 +88,7 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
     // Completely client-side smart recommendation engine
     setTimeout(() => {
       try {
-        const scored = INITIAL_PRODUCTS
+        const scored = products
           .filter(p => p.category === "Noutbuklar")
           .map(product => {
             let score = 50;
@@ -147,7 +148,7 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
             const pCpuLower = product.specs.cpu.toLowerCase();
             const pGpuLower = product.specs.gpu.toLowerCase();
 
-            if (purpose === "Dasturlash va IT") {
+            if (purposes.includes("Dasturlash va IT")) {
               if (product.specs.ram.includes("16 GB") || product.specs.ram.includes("32 GB") || product.specs.ram.includes("48 GB")) {
                 score += 25;
               }
@@ -157,7 +158,8 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
               if (software.some(s => s.toLowerCase().includes("vs code") || s.toLowerCase().includes("intellij"))) {
                 score += 10;
               }
-            } else if (purpose === "Grafik Dizayn va Video montaj") {
+            }
+            if (purposes.includes("Grafik Dizayn va Video montaj")) {
               if (pGpuLower.includes("rtx") || pGpuLower.includes("geforce") || pCpuLower.includes("m3 pro") || pCpuLower.includes("m3 max")) {
                 score += 25;
               }
@@ -167,7 +169,8 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
               if (software.some(s => s.toLowerCase().includes("photoshop") || s.toLowerCase().includes("premiere") || s.toLowerCase().includes("after") || s.toLowerCase().includes("figma") || s.toLowerCase().includes("3ds") || s.toLowerCase().includes("autocad"))) {
                 score += 15;
               }
-            } else if (purpose === "Geyming / Kuchli o'yinlar") {
+            }
+            if (purposes.includes("Geyming / Kuchli o'yinlar")) {
               if (pGpuLower.includes("rtx") || pGpuLower.includes("geforce")) {
                 score += 35;
                 if (pGpuLower.includes("4070") || pGpuLower.includes("4080") || pGpuLower.includes("4090")) {
@@ -183,14 +186,16 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
               if (pCpuLower.includes("celeron") || pCpuLower.includes("pentium") || pGpuLower.includes("600")) {
                 score -= 60; // completely unqualified for deep gaming
               }
-            } else if (purpose === "Ofis directs va hujjatlar") {
+            }
+            if (purposes.includes("Ofis directs va hujjatlar")) {
               if (product.price <= 12000000) {
                 score += 25;
               }
               if (software.some(s => s.toLowerCase().includes("excel") || s.toLowerCase().includes("word"))) {
                 score += 10;
               }
-            } else if (purpose === "Kundalik darslar va YouTube") {
+            }
+            if (purposes.includes("Kundalik darslar va YouTube")) {
               if (product.price <= 9000000) {
                 score += 30;
               }
@@ -234,14 +239,20 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
             reasons.push(`Xaridorlarning talabini mukammal bajarish uchun byudjetingizga juda yaqin narxdagi eng optimal premium variant saralandi.`);
           }
 
-          if (purpose === "Dasturlash va IT") {
+          if (purposes.includes("Dasturlash va IT")) {
             reasons.push(`Tezkor algoritmlar, testlash hamda VS Code / IntelliJ uchun kuchli ${p.specs.cpu} protsessori hamda ${p.specs.ram} tezkor xotirasi bilan mukammal integratsiya.`);
-          } else if (purpose === "Grafik Dizayn va Video montaj") {
+          }
+          if (purposes.includes("Grafik Dizayn va Video montaj")) {
             reasons.push(`Rang uzatishning yuqori darajasi (${p.specs.screenType}) va professional grafik renderlash (${p.specs.gpu}) tufayli ijodiy ishlarga juda mos.`);
-          } else if (purpose === "Geyming / Kuchli o'yinlar") {
+          }
+          if (purposes.includes("Geyming / Kuchli o'yinlar")) {
             reasons.push(`Eng og'ir kadrli o'yinlarda yuqori unumdorlik va quloqlarni charchatmaydigan termal sovutish tizimi hamda ${p.specs.gpu} videokartasi.`);
-          } else {
+          }
+          if (purposes.includes("Ofis directs va hujjatlar") || purposes.includes("Kundalik darslar va YouTube")) {
             reasons.push(`Kundalik hayot, sifatli darslar, veb-surfing hamda dars loyihalari uchun hamyonbop va mutlaqo qulay apparat unumdorligi.`);
+          }
+          if (reasons.length <= 1) {
+            reasons.push(`Ushbu model o'qish, ish va barcha dars ishlari uchun silliq unumdorlikni ta'minlaydi.`);
           }
 
           if (p.brand === "Macbook") {
@@ -320,13 +331,13 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
 
   const convertToProduct = (rec: LaptopRecommendation, idx: number = 0): Product => {
     // Find matching product dynamically to ensure real purchase mapped successfully
-    const matched = INITIAL_PRODUCTS.find(p => p.name === rec.laptopName);
+    const matched = products.find(p => p.name === rec.laptopName);
     if (matched) {
       return matched;
     }
     
     // safe fallback
-    return INITIAL_PRODUCTS[0];
+    return products[0];
   };
 
   const loadingMessages = [
@@ -378,23 +389,33 @@ export default function AIAdvisor({ onInstantBuy, favorites, toggleFavorite }: A
               {/* Question 1 */}
               <div className="space-y-3">
                 <label className="text-sm font-medium text-slate-800 flex items-center gap-1.5">
-                  <BrainCircuit className="w-4 h-4 text-[#FD6C1D]" /> Noutbukni asosan nima uchun ishlatasiz?
+                  <BrainCircuit className="w-4 h-4 text-[#FD6C1D]" /> Noutbukni asosan nima uchun ishlatasiz? (Istalganchasini belgilang)
                 </label>
                 <div className="flex flex-wrap gap-2 text-xs">
-                  {purposeOptions.map(opt => (
-                    <motion.button
-                      key={opt}
-                      whileTap={{ scale: 0.94 }}
-                      onClick={() => setPurpose(opt)}
-                      className={`px-3 py-2.5 rounded-xl border font-medium cursor-pointer transition-all ${
-                        purpose === opt 
-                          ? "bg-[#5A20D4] text-white border-[#5A20D4] shadow-sm shadow-[#5A20D4]/20" 
-                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                      }`}
-                    >
-                      {opt}
-                    </motion.button>
-                  ))}
+                  {purposeOptions.map(opt => {
+                    const isSelected = purposes.includes(opt);
+                    return (
+                      <motion.button
+                        key={opt}
+                        whileTap={{ scale: 0.94 }}
+                        onClick={() => {
+                          setPurposes(prev => 
+                            prev.includes(opt) 
+                              ? (prev.length > 1 ? prev.filter(p => p !== opt) : prev) 
+                              : [...prev, opt]
+                          );
+                        }}
+                        className={`px-3 py-2.5 rounded-xl border font-medium cursor-pointer transition-all flex items-center gap-1.5 ${
+                          isSelected 
+                            ? "bg-[#5A20D4] text-white border-[#5A20D4] shadow-sm shadow-[#5A20D4]/20" 
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[#ADF762]" />}
+                        {opt}
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </div>
 

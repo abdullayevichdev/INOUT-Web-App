@@ -9,6 +9,7 @@ import {
   Heart, 
   ShoppingBag, 
   Cpu, 
+  Settings, 
   Monitor, 
   BatteryCharging, 
   Package, 
@@ -42,6 +43,7 @@ import {
   INITIAL_PRODUCTS 
 } from "./types";
 import AIAdvisor from "./components/AIAdvisor";
+import AdminPanel from "./components/AdminPanel";
 
 export default function App() {
   // Splash Screen State
@@ -58,6 +60,15 @@ export default function App() {
   const [showPwaGuide, setShowPwaGuide] = useState(false);
   const [activeGuideTab, setActiveGuideTab] = useState<"ios" | "android" | "pc">("ios");
 
+  // Dynamic Product Catalog State
+  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+
+  // Admin Panel & Access states
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [adminCodeInput, setAdminCodeInput] = useState("");
+  const [showAdminCodePrompt, setShowAdminCodePrompt] = useState(false);
+  const [isAdminAuth, setIsAdminAuth] = useState(false);
+
   // Core App states
   const [activeTab, setActiveTab] = useState<"home" | "catalog" | "ai" | "profile">("home");
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -68,7 +79,7 @@ export default function App() {
       items: [
         {
           id: "initial-1",
-          product: INITIAL_PRODUCTS[1], // ThinkPad
+          product: INITIAL_PRODUCTS[1], // ThinkPad (on mount snapshot)
           quantity: 1
         }
       ],
@@ -119,8 +130,7 @@ export default function App() {
       id: 1,
       title: "Yozgi qizg'in chegirmalar!",
       subtitle: "Barcha noutbuklarga 15% gacha arzonlashtirilgan narxlar",
-      bgColor: "from-[#FD6C1D] to-[#FD851D]",
-      image: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=400&q=80"
+      bgColor: "from-[#FD6C1D] to-[#FD851D]"
     },
     {
       id: 2,
@@ -299,13 +309,28 @@ export default function App() {
     setCart([]); // reset cart
   };
 
+  // Admin Catalog Modification Handlers
+  const handleAddProduct = (newProduct: Product) => {
+    setProducts(prev => [newProduct, ...prev]);
+  };
+
+  const handleUpdateProduct = (updatedProduct: Product) => {
+    setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+  };
+
+  const handleDeleteProduct = (productId: string) => {
+    setProducts(prev => prev.filter(p => p.id !== productId));
+    setFavorites(prev => prev.filter(id => id !== productId));
+    setCart(prev => prev.filter(item => item.product.id !== productId));
+  };
+
   const handleInstantBuyFromAI = (customProduct: Product) => {
     // Check if product is already in our list, if not insert temporarily so detail works
     addToCart(customProduct);
   };
 
   // Filtered Products for Catalog
-  const filteredProducts = INITIAL_PRODUCTS.filter(p => {
+  const filteredProducts = products.filter(p => {
     // Category match
     if (categoryFilter && p.category !== categoryFilter) return false;
     // Brand match
@@ -314,7 +339,7 @@ export default function App() {
   });
 
   // Hot Search autocomplete items - Figma Images 11
-  const searchResults = INITIAL_PRODUCTS.filter(p => {
+  const searchResults = products.filter(p => {
     if (!searchQuery) return false;
     const q = searchQuery.toLowerCase();
     return p.name.toLowerCase().includes(q) || p.specs.brandAndModel.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q);
@@ -512,7 +537,7 @@ export default function App() {
                     transition={{ duration: 0.45, ease: "easeInOut" }}
                     className="relative z-10 w-full h-full flex items-center justify-between"
                   >
-                    <div className="w-[58%] space-y-1.5 text-left flex flex-col justify-center h-full">
+                     <div className={`${promoBanners[currentPromoIndex].image ? "w-[58%]" : "w-full pr-4"} space-y-1.5 text-left flex flex-col justify-center h-full`}>
                       <span className="bg-[#ADF762] text-slate-900 text-[9px] uppercase tracking-wider font-display font-black px-2.5 py-0.5 rounded shadow-sm w-fit leading-none select-none">
                         AKSIYA
                       </span>
@@ -537,25 +562,27 @@ export default function App() {
                     </div>
 
                     {/* Enlarged and beautifully animated Image */}
-                    <div className="relative w-[38%] h-full flex items-center justify-center">
-                      <motion.img 
-                        initial={{ scale: 0.75, y: 12, rotate: -3 }}
-                        animate={{ 
-                          scale: 1,
-                          y: [0, -6, 0],
-                          rotate: [-1, 2, -1],
-                        }}
-                        transition={{
-                          scale: { duration: 0.4, ease: "easeOut" },
-                          y: { repeat: Infinity, duration: 3.5, ease: "easeInOut" },
-                          rotate: { repeat: Infinity, duration: 4.5, ease: "easeInOut" }
-                        }}
-                        src={promoBanners[currentPromoIndex].image} 
-                        alt="Promo" 
-                        className="w-full max-h-[115%] object-contain filter drop-shadow-[0_15px_15px_rgba(0,0,0,0.35)]"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
+                    {promoBanners[currentPromoIndex].image && (
+                      <div className="relative w-[38%] h-full flex items-center justify-center">
+                        <motion.img 
+                          initial={{ scale: 0.75, y: 12, rotate: -3 }}
+                          animate={{ 
+                            scale: 1,
+                            y: [0, -6, 0],
+                            rotate: [-1, 2, -1],
+                          }}
+                          transition={{
+                            scale: { duration: 0.4, ease: "easeOut" },
+                            y: { repeat: Infinity, duration: 3.5, ease: "easeInOut" },
+                            rotate: { repeat: Infinity, duration: 4.5, ease: "easeInOut" }
+                          }}
+                          src={promoBanners[currentPromoIndex].image} 
+                          alt="Promo" 
+                          className="w-full max-h-[115%] object-contain filter drop-shadow-[0_15px_15px_rgba(0,0,0,0.35)]"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    )}
                   </motion.div>
                 </AnimatePresence>
 
@@ -621,7 +648,7 @@ export default function App() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3.5">
-                  {INITIAL_PRODUCTS.slice(0, 4).map((prod, idx) => {
+                  {products.slice(0, 4).map((prod, idx) => {
                     const isFav = favorites.includes(prod.id);
                     return (
                       <motion.div 
@@ -847,6 +874,7 @@ export default function App() {
                 onInstantBuy={handleInstantBuyFromAI} 
                 favorites={favorites} 
                 toggleFavorite={toggleFavorite} 
+                products={products}
               />
             </div>
           )}
@@ -931,50 +959,7 @@ export default function App() {
                   </div>
                 </motion.div>
 
-                {/* PWA Installation Section - Custom Widget */}
-                <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.05 }}
-                  className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 p-4 rounded-3xl text-left border border-slate-800 shadow-lg text-white relative overflow-hidden select-none"
-                >
-                  <div className="absolute top-[-25px] right-[-25px] w-28 h-28 rounded-full bg-[#FD6C1D]/15 blur-2xl"></div>
-                  <div className="flex items-start gap-3 relative z-10">
-                    <div className="p-3 bg-white/10 rounded-2xl border border-white/10 text-[#ADF762] flex-shrink-0">
-                      <Download className="w-5 h-5 animate-pulse" />
-                    </div>
-                    <div className="space-y-1 flex-1">
-                      <span className="text-[8.5px] uppercase font-black text-[#ADF762] tracking-widest bg-[#ADF762]/10 border border-[#ADF762]/30 px-2.5 py-0.5 rounded-full inline-block">
-                        Mobil &amp; Desktop PWA
-                      </span>
-                      <h3 className="text-xs font-black uppercase text-white tracking-wide">Mobil Ilova Sifatida</h3>
-                      <p className="text-[10px] text-slate-300 leading-normal">
-                        Noutbuklar do'konini to'g'ridan-to'g'ri telefoningiz yoki kompyuteringiz bosh ekraniga o'rnatib oling. Oflayn rejim va tezkor kirish imkoniyati!
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="mt-4 pt-3 border-t border-white/5 flex flex-col gap-2 relative z-10 w-full">
-                    <button
-                      onClick={() => {
-                        if (deferredPrompt) {
-                          triggerPWAInstall();
-                        } else {
-                          setShowPwaGuide(true);
-                        }
-                      }}
-                      className="w-full bg-gradient-to-r from-[#FD6C1D] to-[#FD851D] hover:from-[#FD851D] hover:to-[#FD6C1D] text-white text-[10.5px] font-black uppercase tracking-wider py-3 rounded-2xl transition-all cursor-pointer active:scale-95 shadow-md flex items-center justify-center gap-1.5"
-                    >
-                      <Download className="w-4 h-4" />
-                      O'rnatib olish
-                    </button>
-                    
-                    <span className="text-[#ADF762] font-semibold text-[9px] flex items-center gap-1.5 justify-center leading-none mt-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block shrink-0" />
-                      Avtomatik yangilanadigan zamonaviy PWA ilova
-                    </span>
-                  </div>
-                </motion.div>
 
                 {/* Buyurtm Tarixi - Figma Image 9 */}
                 <motion.div 
@@ -1106,7 +1091,7 @@ export default function App() {
                   <div className="space-y-2.5">
                     {favorites.length > 0 ? (
                       favorites.map(favId => {
-                        const prod = INITIAL_PRODUCTS.find(p => p.id === favId);
+                        const prod = products.find(p => p.id === favId);
                         if (!prod) return null;
                         return (
                           <div 
@@ -1139,6 +1124,75 @@ export default function App() {
                         <span className="block text-xs font-bold text-slate-600">Sevimlilar ro'yxati bo'sh</span>
                         <p className="text-[10px] text-slate-400 leading-normal">Bizning katalogimizga kiring va o'zingizga yoqqan notebookdagi yurakcha tugmasini bosing!</p>
                       </div>
+                    )}
+                  </div>
+                </motion.div>
+
+                {/* Subtle administrative access door - No 1001 displayed anywhere! */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.25 }}
+                  className="bg-slate-50 border border-slate-150 p-4 rounded-3xl text-left flex flex-col gap-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Settings className="w-4 h-4 text-slate-500" />
+                      <span className="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider">Tizim Ma'muriyati</span>
+                    </div>
+                    {isAdminAuth && (
+                      <span className="text-[8.5px] uppercase font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                        Tizim Faol
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className="text-[9.5px] text-slate-400 leading-relaxed font-semibold">
+                    Do'kon tizimi ma'murlari uchun mahsulotlar va katalog boshqaruvi.
+                  </p>
+
+                  <div className="mt-1 flex gap-2">
+                    {isAdminAuth ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowAdminPanel(true)}
+                        className="flex-1 py-2.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-slate-950 active:scale-95 transition cursor-pointer"
+                      >
+                        Boshqaruv Panelini Ochish
+                      </button>
+                    ) : (
+                      <>
+                        <input
+                          type="password"
+                          placeholder="Maxfiy kodni kiriting..."
+                          value={adminCodeInput}
+                          onChange={(e) => setAdminCodeInput(e.target.value)}
+                          className="flex-1 px-3 py-2 bg-white border border-slate-250 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-[#5A20D4]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (adminCodeInput === "1001") {
+                              setIsAdminAuth(true);
+                              setAdminCodeInput("");
+                              setShowAdminPanel(true);
+                              
+                              setToastMessage("Xush kelibsiz! Ma'muriyat bo'limi muvaffaqiyatli ochildi.");
+                              setToastType("online");
+                              setShowNetworkToast(true);
+                              setTimeout(() => setShowNetworkToast(false), 3000);
+                            } else {
+                              setToastMessage("Xatolik: Maxfiy kirish kodi noto'g'ri!");
+                              setToastType("offline");
+                              setShowNetworkToast(true);
+                              setTimeout(() => setShowNetworkToast(false), 3050);
+                            }
+                          }}
+                          className="px-4 py-2 bg-[#5A20D4] hover:bg-[#481AAA] text-white text-[10px] font-black uppercase tracking-wider rounded-xl active:scale-95 transition cursor-pointer"
+                        >
+                          Kirish
+                        </button>
+                      </>
                     )}
                   </div>
                 </motion.div>
@@ -1887,221 +1941,20 @@ export default function App() {
             </motion.div>
           )}
         </AnimatePresence>
-        {/* PWA CUSTOM INTERACTIVE GUIDE MODAL */}
+
+        {/* Full-featured Professional Admin Panel Overlay Modal */}
         <AnimatePresence>
-          {showPwaGuide && (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-              {/* Glass backdrop overlay */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setShowPwaGuide(false)}
-                className="absolute inset-0 bg-slate-950/70 backdrop-blur-md"
-              />
-
-              {/* Guide Contents */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 30 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 30 }}
-                transition={{ type: "spring", damping: 25, stiffness: 350 }}
-                className="bg-white rounded-3xl w-full max-w-sm overflow-hidden border border-slate-100 shadow-2xl relative z-10 text-left"
-              >
-                {/* Header graphic background */}
-                <div className="bg-gradient-to-r from-[#5A20D4] to-[#7B3FE4] p-5 text-white relative">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-xl translate-x-4 -translate-y-4" />
-                  <button
-                    onClick={() => setShowPwaGuide(false)}
-                    className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white p-1.5 rounded-full transition cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                  <span className="text-[9px] font-black uppercase tracking-widest bg-[#ADF762] text-slate-900 px-2.5 py-0.5 rounded-full inline-block mb-1 shadow-sm">
-                    Qo'llanma
-                  </span>
-                  <h3 className="text-sm font-black uppercase tracking-wide">
-                    iNout Ilovasini O'rnatish
-                  </h3>
-                  <p className="text-[10px] text-purple-100 leading-normal mt-1">
-                    Ilovani smartfoningiz yoki kompyuteringiz displeyiga bepul o'rnating va internet aloqasisiz ham ishlash qulayligidan foydalaning.
-                  </p>
-                </div>
-
-                {/* If open inside AI Studio developer iframe, show a tab launcher */}
-                {typeof window !== "undefined" && window.self !== window.top && (
-                  <div className="p-4 bg-amber-50 border-b border-amber-100 flex flex-col gap-2">
-                    <div className="text-[10.5px] text-amber-900 font-bold leading-relaxed text-left flex items-start gap-1.5">
-                      <span className="text-sm">⚠️</span>
-                      <span>
-                        <b>AI Studio Cheklovi:</b> Siz hozir dasturchi rejimi (iframe) ichidasiz. Ushbu rejimda brauzer mutlaqo o'rnatishni taqiqlaydi.
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => window.open(window.location.href, "_blank")}
-                      className="w-full bg-[#5A20D4] hover:bg-[#42179E] text-white text-[10px] font-black uppercase tracking-wider py-3 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md active:scale-95"
-                    >
-                      <Share className="w-3.5 h-3.5" />
-                      Yangi Tabda Ochish (O'rnatish uchun)
-                    </button>
-                  </div>
-                )}
-
-                {/* Device Selector Tabs */}
-                <div className="flex border-b border-slate-100 bg-slate-50 p-2 gap-1.5 select-none font-sans font-bold text-[10px] uppercase tracking-wide">
-                  <button
-                    onClick={() => setActiveGuideTab("ios")}
-                    className={`flex-1 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                      activeGuideTab === "ios"
-                        ? "bg-white text-[#5A20D4] shadow-sm border border-slate-150"
-                        : "text-slate-500 hover:text-slate-800"
-                    }`}
-                  >
-                    <Smartphone className="w-3.5 h-3.5 text-slate-500" />
-                    iOS (iPhone)
-                  </button>
-                  <button
-                    onClick={() => setActiveGuideTab("android")}
-                    className={`flex-1 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                      activeGuideTab === "android"
-                        ? "bg-white text-[#5A20D4] shadow-sm border border-slate-150"
-                        : "text-slate-500 hover:text-slate-800"
-                    }`}
-                  >
-                    <Smartphone className="w-3.5 h-3.5 text-emerald-500" />
-                    Android
-                  </button>
-                  <button
-                    onClick={() => setActiveGuideTab("pc")}
-                    className={`flex-1 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                      activeGuideTab === "pc"
-                        ? "bg-white text-[#5A20D4] shadow-sm border border-slate-150"
-                        : "text-slate-500 hover:text-slate-800"
-                    }`}
-                  >
-                    <Laptop className="w-3.5 h-3.5 text-indigo-500" />
-                    PC
-                  </button>
-                </div>
-
-                {/* Warning about mock interaction to prevent confusion */}
-                <div className="px-5 pt-3 text-[9.5px] text-slate-500 leading-normal bg-slate-50/50 pb-1 italic font-medium">
-                  💡 Quyidagi ko'rinishlar faqat <b>rasm-ko'rsatgich</b> xolos. Ularni bosganda o'rnatish bajarilmaydi, o'rnatishni o'z brauzeringiz menyusidan amalga oshirasiz.
-                </div>
-
-                {/* Steps Content Area with custom visualizations */}
-                <div className="p-5 space-y-4 max-h-[280px] overflow-y-auto no-scrollbar">
-                  {activeGuideTab === "ios" && (
-                    <div className="space-y-3">
-                      <div className="flex gap-3">
-                        <span className="w-5 h-5 rounded-full bg-purple-50 text-[#5A20D4] border border-purple-100 text-[10px] font-black flex items-center justify-center shrink-0">1</span>
-                        <p className="text-[11px] text-slate-600 leading-relaxed">
-                          <b>Safari</b> brauzerida ushbu sahifani ochganingizga ishonch hosil qiling.
-                        </p>
-                      </div>
-                      <div className="flex gap-3">
-                        <span className="w-5 h-5 rounded-full bg-purple-50 text-[#5A20D4] border border-purple-100 text-[10px] font-black flex items-center justify-center shrink-0">2</span>
-                        <div className="text-[11px] text-slate-600 leading-relaxed flex-1 space-y-1">
-                          <span>Pastki paneldagi <b>"Ulashish (Share)"</b> tugmasini bosing:</span>
-                          <div 
-                            onClick={handleGuideItemClick}
-                            className="mt-1 p-2 border border-slate-200 bg-slate-50 hover:bg-slate-100 rounded-xl inline-flex items-center gap-1.5 font-bold text-[10px] text-[#5A20D4] cursor-pointer"
-                          >
-                            <Share className="w-4 h-4 text-[#5A20D4]" />
-                            Ulashish (Share)
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <span className="w-5 h-5 rounded-full bg-purple-50 text-[#5A20D4] border border-purple-100 text-[10px] font-black flex items-center justify-center shrink-0">3</span>
-                        <p className="text-[11px] text-slate-600 leading-relaxed">
-                          Menyuni pastga surib, <b>"Asosiy ekranga qo'shish"</b> (<i>Add to Home Screen</i>) bandini tanlang.
-                        </p>
-                      </div>
-                      <div className="flex gap-3">
-                        <span className="w-5 h-5 rounded-full bg-purple-50 text-[#5A20D4] border border-purple-100 text-[10px] font-black flex items-center justify-center shrink-0">4</span>
-                        <p className="text-[11px] text-slate-600 leading-relaxed">
-                          O'ng yuqoridagi <b>"Qo'shish (Add)"</b> tugmasini bosing va ilovadan foydalaning!
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeGuideTab === "android" && (
-                    <div className="space-y-3">
-                      <div className="flex gap-3">
-                        <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] font-black flex items-center justify-center shrink-0">1</span>
-                        <div className="text-[11px] text-slate-600 leading-relaxed flex-1 space-y-1">
-                          <span>Brauzer yuqorisida yoki pastida chiqadigan <b>"iNout-ni ekranga qo'shish"</b> taklifini bosing:</span>
-                          <div className="flex justify-end mt-1">
-                            <button
-                              onClick={handleGuideItemClick}
-                              className="text-[9px] font-black text-white bg-[#FD6C1D] hover:bg-[#FD851D] px-2.5 py-1.5 rounded-xl uppercase tracking-wider cursor-pointer"
-                            >
-                              Ilovani o'rnatish
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] font-black flex items-center justify-center shrink-0">2</span>
-                        <div className="text-[11px] text-slate-600 leading-relaxed flex-1 space-y-1">
-                          <span>Agar taklif chiqmagan bo'lsa, brauzerning o'ng chetidagi <b>uchta nuqta</b> (<MoreVertical className="inline-block w-3.5 h-3.5 text-slate-500" />) tugmasini bosing.</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] font-black flex items-center justify-center shrink-0">3</span>
-                        <p className="text-[11px] text-slate-600 leading-relaxed">
-                          Menyudan <b>"Ilovani o'rnatish"</b> (<i>Install app</i>) yoki <b>"Asosiy ekranga qo'shish"</b> bandini tanlang.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeGuideTab === "pc" && (
-                    <div className="space-y-3">
-                      <div className="flex gap-3">
-                        <span className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 text-[10px] font-black flex items-center justify-center shrink-0">1</span>
-                        <p className="text-[11px] text-slate-600 leading-relaxed">
-                          <b>Google Chrome</b> yoki <b>Microsoft Edge</b> manzil qatorining eng o'ng qismiga qarang.
-                        </p>
-                      </div>
-                      <div className="flex gap-3">
-                        <span className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 text-[10px] font-black flex items-center justify-center shrink-0">2</span>
-                        <div className="text-[11px] text-slate-600 leading-relaxed flex-1 space-y-1">
-                          <span>Manzil yonidagi monitor/pastga yo'nalgan strelka <b>o'rnatish belgisini</b> bosing:</span>
-                          <div 
-                            onClick={handleGuideItemClick}
-                            className="mt-1.5 p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl inline-flex items-center gap-1 text-[10px] font-extrabold text-[#5A20D4] cursor-pointer"
-                          >
-                            <Download className="w-3.5 h-3.5 text-[#5A20D4]" />
-                            O'rnatish / Install
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <span className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 text-[10px] font-black flex items-center justify-center shrink-0">3</span>
-                        <p className="text-[11px] text-slate-600 leading-relaxed">
-                          <b>"O'rnatish (Install)"</b> buyrug'ini bosing. Ilova darchasi darhol monitorda mustaqil dastur kabi ochiladi!
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Footer close CTA */}
-                <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
-                  <button
-                    onClick={() => setShowPwaGuide(false)}
-                    className="px-5 py-2.5 bg-slate-800 hover:bg-slate-950 text-white rounded-xl text-[10px] font-black uppercase tracking-wider cursor-pointer transition active:scale-95 shadow-sm"
-                  >
-                    Tushunarli
-                  </button>
-                </div>
-              </motion.div>
-            </div>
+          {showAdminPanel && (
+            <AdminPanel 
+              products={products}
+              onAddProduct={handleAddProduct}
+              onUpdateProduct={handleUpdateProduct}
+              onDeleteProduct={handleDeleteProduct}
+              onClose={() => setShowAdminPanel(false)}
+            />
           )}
         </AnimatePresence>
+
       </div>
     </div>
   );
